@@ -2,8 +2,8 @@
 #include <mcp2515.h>
 #include <mcp2515_can.h>
 
-const int SPI_CS_PIN = 4;
-const int CAN_INT_PIN = 2;
+const int SPI_CS_PIN = 1;
+const int CAN_INT_PIN = 7;
 
 const int SPI_CLOCK = 9600; // 9600 - NANO || 115200 - UNO
 
@@ -15,12 +15,11 @@ struct can_frame canMsg;
 
 int i=0x00;
 int pressed=0;
-/*const int buttonPin3 = 3;
+const int buttonPin2 = 2;
+const int buttonPin3 = 3;
 const int buttonPin4 = 4;
 const int buttonPin5 = 5;
-const int buttonPin6 = 6;
-const int buttonPin7 = 7; // SHIFT
-const int D9 = 9;*/
+const int buttonPin6 = 6; // SHIFT
 
 void setup() {
   Serial.begin(9600); 
@@ -50,13 +49,13 @@ void setup() {
   digitalWrite(A3, LOW);
 
   pinMode(A4, OUTPUT);
-  digitalWrite(A4, LOW);
-
-  // test pin
-  pinMode(D9, OUTPUT);
-  digitalWrite(D9, HIGH);
+  digitalWrite(A4, LOW);*/
+  
 
   //CAN BUS
+  pinMode(buttonPin2, INPUT);
+  digitalWrite(buttonPin2, LOW);
+
   pinMode(buttonPin3, INPUT);
   digitalWrite(buttonPin3, LOW);
 
@@ -68,9 +67,6 @@ void setup() {
 
   pinMode(buttonPin6, INPUT);
   digitalWrite(buttonPin6, LOW);
-
-  pinMode(buttonPin7, INPUT);
-  digitalWrite(buttonPin7, LOW);*/
 
   canMsg.can_id  = 0x300;
   canMsg.can_dlc = 8;
@@ -88,33 +84,33 @@ void setup() {
 
 void loop() {
 
-  SERIAL_PORT_MONITOR.println("SUCCESS");
-  delay(2000);
+  //Serial.println("SUCCESS");
+  //delay(2000);
 
-  /*if(digitalRead(buttonPin7)) {//if (digitalRead(buttonPin3) && digitalRead(buttonPin7)) {//Down+Shift - shift requires two buttons to be pressed
+  if(digitalRead(buttonPin6)) {//if (digitalRead(buttonPin2) && digitalRead(buttonPin6)) {//Down+Shift - shift requires two buttons to be pressed
     canMsg.data[3]=0x20;
-    SERIAL_PORT_MONITOR.println("DOWN"); // MENU DOWN 
-  } else if (digitalRead(buttonPin3)) {//Up
+    Serial.println("DOWN"); // MENU DOWN 
+  } else if (digitalRead(buttonPin2)) {//Up
     canMsg.data[3]=0x80;  // DOES MENU UP
-    SERIAL_PORT_MONITOR.println("UP");  // MENU UP
-  } else if(digitalRead(buttonPin6)) { //if (digitalRead(buttonPin4) && digitalRead(buttonPin7)) {//Left+shift - shift requires two buttons to be pressed
+    Serial.println("UP");  // MENU UP
+  } else if(digitalRead(buttonPin3)) { //if (digitalRead(buttonPin4) && digitalRead(buttonPin6)) {//Left+shift - shift requires two buttons to be pressed
     canMsg.data[3]=0x08;
-    SERIAL_PORT_MONITOR.println("LEFT");  // MENU LEFT
-  } else if (digitalRead(buttonPin4)) {//Right
+    Serial.println("LEFT");  // MENU LEFT
+  } else if (digitalRead(buttonPin5)) {//Right
     canMsg.data[3]=0x02;
-    SERIAL_PORT_MONITOR.println("RIGHT"); // MENU RIGHT
-  } else if (digitalRead(buttonPin5)) {//Click
+    Serial.println("RIGHT"); // MENU RIGHT
+  } else if (digitalRead(buttonPin4)) {//Click
     canMsg.data[4]=0x80;
-    SERIAL_PORT_MONITOR.println("CLICK"); // CLICK THE MENU
+    Serial.println("CLICK"); // CLICK THE MENU
   } else {
     if(canMsg.data[3] != 0x00) {
       canMsg.data[3]=0x00;
       pressed=0;
-      //SERIAL_PORT_MONITOR.println("DEBUG1");
+      //Serial.println("DEBUG1");
     } else if(canMsg.data[4] != 0x00) {
       canMsg.data[4]=0x00;
       pressed=0;
-      //SERIAL_PORT_MONITOR.println("DEBUG2");
+      //Serial.println("DEBUG2");
     }
   }
 
@@ -131,35 +127,35 @@ void loop() {
   if( (canMsg.data[3] != 0x00 || canMsg.data[4] != 0x00) && pressed == 0) {
     pressed=1;
 
-    SERIAL_PORT_MONITOR.println("SEND MSG");
+    Serial.println("SEND MSG");
     mcp2515_can.sendMessage(&canMsg);
   }
-
-  //SERIAL_PORT_MONITOR.println(pressed);
+/*
+  //Serial.println(pressed);
 
   //ATC part
   if (digitalRead(A0)) {//ATC NO=A2, NC=A1 // pressed
-    SERIAL_PORT_MONITOR.println("TC + CLICKED");
+    Serial.println("TC + CLICKED");
     digitalWrite(A2,LOW);
     digitalWrite(A1,HIGH);
   } else {
-    //SERIAL_PORT_MONITOR.println("TC + RELEASED");
+    //Serial.println("TC + RELEASED");
     digitalWrite(A1,LOW); // not pressed
     digitalWrite(A2,HIGH);
   }
   
   if (digitalRead(A3)) {//ATC NO=A5, NC=A4 // pressed
-    SERIAL_PORT_MONITOR.println("TC - CLICKED");
+    Serial.println("TC - CLICKED");
     digitalWrite(A5,LOW);
     digitalWrite(A4,HIGH);
   } else {                      // not pressed
-    //SERIAL_PORT_MONITOR.println("TC - RELEASED");
+    //Serial.println("TC - RELEASED");
     digitalWrite(A4,LOW);
     digitalWrite(A5,HIGH);
   }
 
-  */
+*/
 
   //END ATC Part
-  //delay(200);
+  delay(50);
 }
