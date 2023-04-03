@@ -2,10 +2,12 @@
 #include <mcp2515.h>
 #include <mcp2515_can.h>
 
-const int SPI_CS_PIN = 10;
+const int SPI_CS_PIN = 4;
 const int CAN_INT_PIN = 2;
 
-MCP2515 mcp2515_can(SPI_CS_PIN); // Set CS pin
+const int SPI_CLOCK = 9600; // 9600 - NANO || 115200 - UNO
+
+MCP2515 mcp2515_can(SPI_CS_PIN, SPI_CLOCK, &SPI); // Set CS pin
 #define MAX_DATA_SIZE 8
 
 
@@ -13,28 +15,29 @@ struct can_frame canMsg;
 
 int i=0x00;
 int pressed=0;
-const int buttonPin3 = 3;
+/*const int buttonPin3 = 3;
 const int buttonPin4 = 4;
 const int buttonPin5 = 5;
 const int buttonPin6 = 6;
 const int buttonPin7 = 7; // SHIFT
-const int D9 = 9;
+const int D9 = 9;*/
 
 void setup() {
-  SERIAL_PORT_MONITOR.begin(9600); // 9600 - NANO || 115200 - UNO
+  Serial.begin(9600); 
+  SPI.begin();
 
   mcp2515_can.reset();
   mcp2515_can.setBitrate(CAN_1000KBPS);
   mcp2515_can.setNormalMode();
 
-    SERIAL_PORT_MONITOR.println(F("CAN init ok!"));
-    Serial.println(SPI_CS_PIN);
-    Serial.println(CAN_INT_PIN);
+  Serial.println(F("CAN init ok!"));
+  Serial.println(SPI_CS_PIN);
+  Serial.println(CAN_INT_PIN);
 
-    
+  delay(100);
 
   //ATC Control
-  pinMode(A0, OUTPUT);
+  /*pinMode(A0, OUTPUT);
   digitalWrite(A0, LOW);
 
   pinMode(A1, OUTPUT);
@@ -67,7 +70,7 @@ void setup() {
   digitalWrite(buttonPin6, LOW);
 
   pinMode(buttonPin7, INPUT);
-  digitalWrite(buttonPin7, LOW);
+  digitalWrite(buttonPin7, LOW);*/
 
   canMsg.can_id  = 0x300;
   canMsg.can_dlc = 8;
@@ -85,9 +88,10 @@ void setup() {
 
 void loop() {
 
+  SERIAL_PORT_MONITOR.println("SUCCESS");
+  delay(2000);
 
-
-  if(digitalRead(buttonPin7)) {//if (digitalRead(buttonPin3) && digitalRead(buttonPin7)) {//Down+Shift - shift requires two buttons to be pressed
+  /*if(digitalRead(buttonPin7)) {//if (digitalRead(buttonPin3) && digitalRead(buttonPin7)) {//Down+Shift - shift requires two buttons to be pressed
     canMsg.data[3]=0x20;
     SERIAL_PORT_MONITOR.println("DOWN"); // MENU DOWN 
   } else if (digitalRead(buttonPin3)) {//Up
@@ -154,7 +158,7 @@ void loop() {
     digitalWrite(A5,HIGH);
   }
 
-
+  */
 
   //END ATC Part
   //delay(200);
