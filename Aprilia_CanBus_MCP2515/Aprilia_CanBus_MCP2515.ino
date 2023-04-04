@@ -26,14 +26,14 @@ void setup() {
   SERIAL_PORT_MONITOR.begin(9600); 
 
   // maybe the lib is not setting it
-  pinMode(SPI_CS_PIN, OUTPUT);
-  digitalWrite(SPI_CS_PIN, HIGH);
+  //pinMode(SPI_CS_PIN, OUTPUT);
+  //digitalWrite(SPI_CS_PIN, HIGH);
 
   while(!Serial){};
 
   while (CAN_OK != CAN.begin(CAN_1000KBPS, MCP_8MHz)) { // by default MCP_16MHz
     SERIAL_PORT_MONITOR.println("CAN init failed, retry...");
-    delay(100);
+    delay(200);
   }
 
   SERIAL_PORT_MONITOR.println(F("CAN init success!"));
@@ -60,6 +60,8 @@ void setup() {
 }
 
 void loop() {
+
+  //SERIAL_PORT_MONITOR.println(digitalRead(SPI_CS_PIN)); // 0 - LOW -- 1 - HIGH 
 
   if(digitalRead(buttonPin6)) {//if (digitalRead(buttonPin2) && digitalRead(buttonPin6)) {//Down+Shift - shift requires two buttons to be pressed
     data[3]=0x20;
