@@ -4,12 +4,10 @@
 
 const int SPI_CS_PIN = 1;
 const int CAN_INT_PIN = 7;
-
 const int SPI_CLOCK = 9600; // 9600 - NANO || 115200 - UNO
 
-MCP2515 mcp2515_can(SPI_CS_PIN, SPI_CLOCK, &SPI); // Set CS pin
+MCP2515 mcp2515_can(SPI_CS_PIN); // Set CS pin
 #define MAX_DATA_SIZE 8
-
 
 struct can_frame canMsg;
 
@@ -19,40 +17,32 @@ const int buttonPin2 = 2;
 const int buttonPin3 = 3;
 const int buttonPin4 = 4;
 const int buttonPin5 = 5;
-const int buttonPin6 = 6; // SHIFT
+const int buttonPin6 = 6;
 
 void setup() {
   Serial.begin(9600); 
   SPI.begin();
 
+  // mcp2515 header
   mcp2515_can.reset();
   mcp2515_can.setBitrate(CAN_1000KBPS);
   mcp2515_can.setNormalMode();
 
-  Serial.println(F("CAN init ok!"));
+  /*
+  // mcp2515_can header
+  while (CAN_OK != mcp2515_can.begin(CAN_1000KBPS)) {
+    SERIAL_PORT_MONITOR.println("CAN init failed, retry...");
+    delay(100);
+  }
+  */
+
+  Serial.println(F("CAN init success!"));
   Serial.println(SPI_CS_PIN);
   Serial.println(CAN_INT_PIN);
 
   delay(100);
 
-  //ATC Control
-  /*pinMode(A0, OUTPUT);
-  digitalWrite(A0, LOW);
-
-  pinMode(A1, OUTPUT);
-  digitalWrite(A1, LOW);
-
-  pinMode(A2, OUTPUT);
-  digitalWrite(A2, LOW);
-
-  pinMode(A3, OUTPUT);
-  digitalWrite(A3, LOW);
-
-  pinMode(A4, OUTPUT);
-  digitalWrite(A4, LOW);*/
-  
-
-  //CAN BUS
+  //SWITCH BUTTONS - CAN BUS
   pinMode(buttonPin2, INPUT);
   digitalWrite(buttonPin2, LOW);
 
@@ -68,8 +58,9 @@ void setup() {
   pinMode(buttonPin6, INPUT);
   digitalWrite(buttonPin6, LOW);
 
+  // CAN MESSAGE DATA STRUCT
   canMsg.can_id  = 0x300;
-  canMsg.can_dlc = 8;
+  canMsg.can_dlc = MAX_DATA_SIZE;
 
   canMsg.data[0] = 0x00;
   canMsg.data[1] = 0x00;
@@ -79,13 +70,9 @@ void setup() {
   canMsg.data[5] = 0x00;
   canMsg.data[6] = 0x00;
   canMsg.data[7] = 0x00;
-  
 }
 
 void loop() {
-
-  //Serial.println("SUCCESS");
-  //delay(2000);
 
   if(digitalRead(buttonPin6)) {//if (digitalRead(buttonPin2) && digitalRead(buttonPin6)) {//Down+Shift - shift requires two buttons to be pressed
     canMsg.data[3]=0x20;
@@ -122,40 +109,11 @@ void loop() {
     i++;
   }
 
-  
-  
   if( (canMsg.data[3] != 0x00 || canMsg.data[4] != 0x00) && pressed == 0) {
     pressed=1;
-
     Serial.println("SEND MSG");
     mcp2515_can.sendMessage(&canMsg);
   }
-/*
-  //Serial.println(pressed);
 
-  //ATC part
-  if (digitalRead(A0)) {//ATC NO=A2, NC=A1 // pressed
-    Serial.println("TC + CLICKED");
-    digitalWrite(A2,LOW);
-    digitalWrite(A1,HIGH);
-  } else {
-    //Serial.println("TC + RELEASED");
-    digitalWrite(A1,LOW); // not pressed
-    digitalWrite(A2,HIGH);
-  }
-  
-  if (digitalRead(A3)) {//ATC NO=A5, NC=A4 // pressed
-    Serial.println("TC - CLICKED");
-    digitalWrite(A5,LOW);
-    digitalWrite(A4,HIGH);
-  } else {                      // not pressed
-    //Serial.println("TC - RELEASED");
-    digitalWrite(A4,LOW);
-    digitalWrite(A5,HIGH);
-  }
-
-*/
-
-  //END ATC Part
   delay(50);
 }
