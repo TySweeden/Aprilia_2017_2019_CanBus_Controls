@@ -25,6 +25,10 @@ const int buttonPin6 = 6; // SHIFT
 void setup() {
   SERIAL_PORT_MONITOR.begin(9600); 
 
+  // maybe the lib is not setting it
+  pinMode(SPI_CS_PIN, OUTPUT);
+  digitalWrite(SPI_CS_PIN, HIGH);
+
   while(!Serial){};
 
   while (CAN_OK != CAN.begin(CAN_1000KBPS, MCP_8MHz)) { // by default MCP_16MHz
