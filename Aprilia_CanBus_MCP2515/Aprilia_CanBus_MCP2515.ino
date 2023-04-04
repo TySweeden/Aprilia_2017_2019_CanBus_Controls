@@ -25,7 +25,7 @@ void setup() {
 
   // mcp2515 header
   mcp2515_can.reset();
-  mcp2515_can.setBitrate(CAN_1000KBPS);
+  mcp2515_can.setBitrate(CAN_1000KBPS, MCP_8MHZ);
   mcp2515_can.setNormalMode();
 
   /*
