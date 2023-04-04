@@ -1,22 +1,34 @@
 #include <SPI.h>
-#include <mcp2515.h>
-#include <mcp2515_can.h>
 
-const int SPI_CS_PIN = 1;
+#include <can-serial.h>
+#include <mcp2515_can.h>
+#include <mcp2515_can_dfs.h>
+#include <mcp2518fd_can.h>
+#include <mcp2518fd_can_dfs.h>
+#include <mcp_can.h>
+//#include <mcp2515.h>
+//#include <mcp2515_can.h>
+
+const int SPI_CS_PIN = 3; // NANO - 10 -- XIAO - 3
 const int CAN_INT_PIN = 7;
 
 const int SPI_CLOCK = 9600; // 9600 - NANO || 115200 - UNO
 
-MCP2515 mcp2515_can(SPI_CS_PIN, SPI_CLOCK, &SPI); // Set CS pin
-#define MAX_DATA_SIZE 8
+//MCP2515 mcp2515_can(SPI_CS_PIN, SPI_CLOCK, &SPI); // Set CS pin
+mcp2515_can CAN(SPI_CS_PIN); // Set CS pin
+#define MAX_DATA_SIZE 8;
+#define IS_EXTENSION_ID 0;
 
-
-struct can_frame canMsg;
+//struct can_frame canMsg;
+unsigned char data[8] = {0, 0, 0, 0, 0, 0, 0, 0};
+unsigned long can_id = 0x300;
+byte ext = IS_EXTENSION_ID;
+byte len = MAX_DATA_SIZE;
 
 int i=0x00;
 int pressed=0;
 const int buttonPin2 = 2;
-const int buttonPin3 = 3;
+const int buttonPin1 = 1;
 const int buttonPin4 = 4;
 const int buttonPin5 = 5;
 const int buttonPin6 = 6; // SHIFT
@@ -25,9 +37,16 @@ void setup() {
   Serial.begin(9600); 
   SPI.begin();
 
-  mcp2515_can.reset();
-  mcp2515_can.setBitrate(CAN_1000KBPS);
-  mcp2515_can.setNormalMode();
+  //CAN.reset();
+  //CAN.setBitrate(CAN_1000KBPS);
+  //CAN.setNormalMode();
+
+  while(!Serial){};
+
+  while (CAN_OK != CAN.begin(CAN_1000KBPS)) {             // init can bus : baudrate = 500k
+    Serial.println("CAN init fail, retry...");
+    delay(100);
+  }
 
   Serial.println(F("CAN init ok!"));
   Serial.println(SPI_CS_PIN);
@@ -56,8 +75,8 @@ void setup() {
   pinMode(buttonPin2, INPUT);
   digitalWrite(buttonPin2, LOW);
 
-  pinMode(buttonPin3, INPUT);
-  digitalWrite(buttonPin3, LOW);
+  pinMode(buttonPin1, INPUT);
+  digitalWrite(buttonPin1, LOW);
 
   pinMode(buttonPin4, INPUT);
   digitalWrite(buttonPin4, LOW);
@@ -68,7 +87,7 @@ void setup() {
   pinMode(buttonPin6, INPUT);
   digitalWrite(buttonPin6, LOW);
 
-  canMsg.can_id  = 0x300;
+  /*canMsg.can_id  = 0x300;
   canMsg.can_dlc = 8;
 
   canMsg.data[0] = 0x00;
@@ -78,8 +97,7 @@ void setup() {
   canMsg.data[4] = 0x00;
   canMsg.data[5] = 0x00;
   canMsg.data[6] = 0x00;
-  canMsg.data[7] = 0x00;
-  
+  canMsg.data[7] = 0x00;*/
 }
 
 void loop() {
@@ -88,33 +106,41 @@ void loop() {
   //delay(2000);
 
   if(digitalRead(buttonPin6)) {//if (digitalRead(buttonPin2) && digitalRead(buttonPin6)) {//Down+Shift - shift requires two buttons to be pressed
-    canMsg.data[3]=0x20;
+    //canMsg.data[3]=0x20;
+    data[3]=0x20;
     Serial.println("DOWN"); // MENU DOWN 
   } else if (digitalRead(buttonPin2)) {//Up
-    canMsg.data[3]=0x80;  // DOES MENU UP
+    //canMsg.data[3]=0x80;  // DOES MENU UP
+    data[3]=0x80;
     Serial.println("UP");  // MENU UP
-  } else if(digitalRead(buttonPin3)) { //if (digitalRead(buttonPin4) && digitalRead(buttonPin6)) {//Left+shift - shift requires two buttons to be pressed
-    canMsg.data[3]=0x08;
+  } else if(digitalRead(buttonPin1)) { //if (digitalRead(buttonPin4) && digitalRead(buttonPin6)) {//Left+shift - shift requires two buttons to be pressed
+    //canMsg.data[3]=0x08;
+    data[3]=0x08;
     Serial.println("LEFT");  // MENU LEFT
   } else if (digitalRead(buttonPin5)) {//Right
-    canMsg.data[3]=0x02;
+    //canMsg.data[3]=0x02;
+    data[3]=0x02;
     Serial.println("RIGHT"); // MENU RIGHT
   } else if (digitalRead(buttonPin4)) {//Click
-    canMsg.data[4]=0x80;
+    //canMsg.data[4]=0x80;
+    data[4]=0x80;
     Serial.println("CLICK"); // CLICK THE MENU
   } else {
-    if(canMsg.data[3] != 0x00) {
-      canMsg.data[3]=0x00;
+    if(data[3] != 0x00) { //if(canMsg.data[3] != 0x00) {
+      //canMsg.data[3]=0x00;
+      data[3]=0x00;
       pressed=0;
       //Serial.println("DEBUG1");
-    } else if(canMsg.data[4] != 0x00) {
-      canMsg.data[4]=0x00;
+    } else if(data[4] != 0x00) { // else if(canMsg.data[4] != 0x00) {
+      //canMsg.data[4]=0x00;
+      data[4]=0x00;
       pressed=0;
       //Serial.println("DEBUG2");
     }
   }
 
-  canMsg.data[7] = i; 
+  //canMsg.data[7] = i; 
+  data[7] = i;
 
   if (i==0x0F) {
     i=0x00; //reset
@@ -124,11 +150,11 @@ void loop() {
 
   
   
-  if( (canMsg.data[3] != 0x00 || canMsg.data[4] != 0x00) && pressed == 0) {
+  if( (data[3] != 0x00 || data[4] != 0x00) && pressed == 0) { //if( (canMsg.data[3] != 0x00 || canMsg.data[4] != 0x00) && pressed == 0) {
     pressed=1;
-
     Serial.println("SEND MSG");
-    mcp2515_can.sendMessage(&canMsg);
+    //CAN.sendMessage(&canMsg);
+    CAN.MCP_CAN::sendMsgBuf(can_id, ext, len, data);
   }
 /*
   //Serial.println(pressed);
