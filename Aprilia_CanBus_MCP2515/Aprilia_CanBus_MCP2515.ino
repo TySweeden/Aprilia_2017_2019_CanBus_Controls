@@ -1,21 +1,15 @@
 #include <SPI.h>
-
-#include <can-serial.h>
-#include <mcp2515_can.h>
-#include <mcp2515_can_dfs.h>
-#include <mcp2518fd_can.h>
-#include <mcp2518fd_can_dfs.h>
 #include <mcp_can.h>
 //#include <mcp2515.h>
 //#include <mcp2515_can.h>
 
 const int SPI_CS_PIN = 3; // NANO - 10 -- XIAO - 3
 const int CAN_INT_PIN = 7;
-
 const int SPI_CLOCK = 9600; // 9600 - NANO || 115200 - UNO
 
 //MCP2515 mcp2515_can(SPI_CS_PIN, SPI_CLOCK, &SPI); // Set CS pin
-mcp2515_can CAN(SPI_CS_PIN); // Set CS pin
+//mcp2515_can CAN(SPI_CS_PIN); // Set CS pin
+MCP_CAN CAN(SPI_CS_PIN); // Set CS pin
 #define MAX_DATA_SIZE 8;
 #define IS_EXTENSION_ID 0;
 
@@ -41,11 +35,17 @@ void setup() {
   //CAN.setBitrate(CAN_1000KBPS);
   //CAN.setNormalMode();
 
-  while(!Serial){};
+  /*while(!Serial){};
 
   while (CAN_OK != CAN.begin(CAN_1000KBPS)) {             // init can bus : baudrate = 500k
     Serial.println("CAN init fail, retry...");
     delay(100);
+  }*/
+
+  if (CAN.begin(MCP_NORMAL, CAN_1000KBPS, MCP_16MHZ) == CAN_OK) { // CAN.begin(CAN_1000KBPS, MCP_16MHZ)
+    Serial.println("MCP2515 Initialized Successfully!");
+  } else {
+    Serial.println("Error Initializing MCP2515...");
   }
 
   Serial.println(F("CAN init ok!"));
@@ -152,9 +152,14 @@ void loop() {
   
   if( (data[3] != 0x00 || data[4] != 0x00) && pressed == 0) { //if( (canMsg.data[3] != 0x00 || canMsg.data[4] != 0x00) && pressed == 0) {
     pressed=1;
-    Serial.println("SEND MSG");
+    if (CAN.sendMsgBuf(can_id, ext, len, data) == CAN_OK) {
+      Serial.println("Message Sent Successfully!");
+    } else {
+      Serial.println("Error Sending Message...");
+    }
+    //Serial.println("SEND MSG");
     //CAN.sendMessage(&canMsg);
-    CAN.MCP_CAN::sendMsgBuf(can_id, ext, len, data);
+    //CAN.MCP_CAN::sendMsgBuf(can_id, ext, len, data);
   }
 /*
   //Serial.println(pressed);
