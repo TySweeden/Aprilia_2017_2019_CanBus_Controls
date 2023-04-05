@@ -27,11 +27,11 @@ void setup() {
 
   // maybe the lib is not setting it
   //pinMode(SPI_CS_PIN, OUTPUT);
-  //digitalWrite(SPI_CS_PIN, HIGH);
+  //digitalWrite(SPI_CS_PIN, LOW);
 
   while(!Serial){};
 
-  while (CAN_OK != CAN.begin(CAN_1000KBPS, MCP_8MHz)) { // by default MCP_16MHz
+  while (CAN_OK != CAN.begin(CAN_1000KBPS)) { // by default MCP_16MHz
     SERIAL_PORT_MONITOR.println("CAN init failed, retry...");
     delay(200);
   }
@@ -102,7 +102,8 @@ void loop() {
   if( (data[3] != 0x00 || data[4] != 0x00) && pressed == 0) {
     pressed=1;
     SERIAL_PORT_MONITOR.println("SEND MSG");
-    CAN.MCP_CAN::sendMsgBuf(can_id, ext, len, data);
+    CAN.sendMsgBuf(can_id, ext, 0, len, data);
+    //CAN.MCP_CAN::sendMsgBuf(can_id, ext, len, data);
   }
 
   delay(50);
