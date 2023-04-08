@@ -15,7 +15,8 @@ byte len = MAX_DATA_SIZE;
 mcp2515_can CAN(SPI_CS_PIN); // Set CS pin
 
 int i=0x00;
-int pressed=0;
+bool pressed=false;
+bool messageSent=false;
 const int buttonPin2 = 2;
 const int buttonPin3 = 3;
 const int buttonPin4 = 4;
@@ -40,7 +41,7 @@ void setup() {
   SERIAL_PORT_MONITOR.println(SPI_CS_PIN);
   SERIAL_PORT_MONITOR.println(CAN_INT_PIN);
 
-  delay(100);
+  //delay(100);
 
   //CAN BUS
   pinMode(buttonPin2, INPUT);
@@ -60,51 +61,58 @@ void setup() {
 }
 
 void loop() {
-
-  //SERIAL_PORT_MONITOR.println(digitalRead(SPI_CS_PIN)); // 0 - LOW -- 1 - HIGH 
+  if(pressed) {
+    //SERIAL_PORT_MONITOR.println((!messageSent && (data[3] != 0x00 || data[4] != 0x00)));
+    //if(!messageSent) {
+      //SERIAL_PORT_MONITOR.println(messageSent);
+      CAN.sendMsgBuf(can_id, ext, 0, len, data);
+      
+      //messageSent = true;
+    //}
+  } ///else if(messageSent) {
+    //messageSent = false;
+  //}
 
   if(digitalRead(buttonPin6)) {//if (digitalRead(buttonPin2) && digitalRead(buttonPin6)) {//Down+Shift - shift requires two buttons to be pressed
     data[3]=0x20;
-    SERIAL_PORT_MONITOR.println("DOWN"); // MENU DOWN 
+    //SERIAL_PORT_MONITOR.println("DOWN"); // MENU DOWN 
   } else if (digitalRead(buttonPin2)) {//Up
     data[3]=0x80;
-    SERIAL_PORT_MONITOR.println("UP");  // MENU UP
+    //SERIAL_PORT_MONITOR.println("UP");  // MENU UP
   } else if(digitalRead(buttonPin3)) { //if (digitalRead(buttonPin4) && digitalRead(buttonPin6)) {//Left+shift - shift requires two buttons to be pressed
     data[3]=0x08;
-    SERIAL_PORT_MONITOR.println("LEFT");  // MENU LEFT
+    //SERIAL_PORT_MONITOR.println("LEFT");  // MENU LEFT
   } else if (digitalRead(buttonPin5)) {//Right
     data[3]=0x02;
-    SERIAL_PORT_MONITOR.println("RIGHT"); // MENU RIGHT
+    //SERIAL_PORT_MONITOR.println("RIGHT"); // MENU RIGHT
   } else if (digitalRead(buttonPin4)) {//Click
     data[4]=0x80;
-    SERIAL_PORT_MONITOR.println("CLICK"); // CLICK THE MENU
+    //SERIAL_PORT_MONITOR.println("CLICK"); // CLICK THE MENU
   } else {
     if(data[3] != 0x00) {
       data[3]=0x00;
-      pressed=0;
+      pressed=false;
       //SERIAL_PORT_MONITOR.println("DEBUG1");
     } else if(data[4] != 0x00) {
       data[4]=0x00;
-      pressed=0;
+      pressed=false;
       //SERIAL_PORT_MONITOR.println("DEBUG2");
     }
   }
 
-  data[7] = i;
+  //data[7] = i;
 
-  if (i==0x0F) {
-    i=0x00; //reset
-  } else {
-    i++;
-  }
+  //if (i==0x0F) {
+  //  i=0x00; //reset
+  //} else {
+  //  i++;
+  //}
 
 
-  if( (data[3] != 0x00 || data[4] != 0x00) && pressed == 0) {
-    pressed=1;
-    SERIAL_PORT_MONITOR.println("SEND MSG");
-    CAN.sendMsgBuf(can_id, ext, 0, len, data);
+  if(data[3] != 0x00 || data[4] != 0x00) {
+    //SERIAL_PORT_MONITOR.println("SEND MSG");
+    //CAN.sendMsgBuf(can_id, ext, 0, len, data);
     //CAN.MCP_CAN::sendMsgBuf(can_id, ext, len, data);
+    pressed=true;
   }
-
-  delay(50);
 }
