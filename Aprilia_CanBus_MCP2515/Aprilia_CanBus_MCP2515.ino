@@ -1,5 +1,6 @@
 #include <SPI.h>
 #include <mcp2515_can.h>
+#include <mcp2518fd_can.h>
 #define MAX_DATA_SIZE 8;
 #define IS_EXTENSION_ID 0;
 
@@ -23,14 +24,17 @@ const int buttonPin4 = 4;
 const int buttonPin5 = 5;
 const int buttonPin6 = 6; // SHIFT
 
-void setup() {
+void setup() {  
   SERIAL_PORT_MONITOR.begin(9600); 
 
   // maybe the lib is not setting it
   //pinMode(SPI_CS_PIN, OUTPUT);
   //digitalWrite(SPI_CS_PIN, LOW);
 
-  while(!Serial){};
+  //while(!Serial){};
+
+  CAN.setMode(CAN_NORMAL_MODE);
+  //CAN.setSPI(&SPI);
 
   while (CAN_OK != CAN.begin(CAN_1000KBPS)) { // by default MCP_16MHz
     SERIAL_PORT_MONITOR.println("CAN init failed, retry...");
@@ -61,23 +65,28 @@ void setup() {
 }
 
 void loop() {
-  if(pressed) {
-    //SERIAL_PORT_MONITOR.println((!messageSent && (data[3] != 0x00 || data[4] != 0x00)));
-    //if(!messageSent) {
-      //SERIAL_PORT_MONITOR.println(messageSent);
+  /*if(pressed) {//&& !messageSent) {
+      SERIAL_PORT_MONITOR.println("DEBUG1");
       CAN.sendMsgBuf(can_id, ext, 0, len, data);
-      
-      //messageSent = true;
-    //}
-  } ///else if(messageSent) {
-    //messageSent = false;
-  //}
+      messageSent = true;
+  } else if(!pressed && messageSent) {
+    SERIAL_PORT_MONITOR.println("DEBUG2");
+    messageSent = false;
+  }*/
 
   if(digitalRead(buttonPin6)) {//if (digitalRead(buttonPin2) && digitalRead(buttonPin6)) {//Down+Shift - shift requires two buttons to be pressed
     data[3]=0x20;
     //SERIAL_PORT_MONITOR.println("DOWN"); // MENU DOWN 
   } else if (digitalRead(buttonPin2)) {//Up
-    data[3]=0x80;
+
+    if(!pressed) {
+      SERIAL_PORT_MONITOR.println("DEBUG1"); 
+      data[3]=0x80;
+    } else if(data[3] != 0x00) {
+      SERIAL_PORT_MONITOR.println("DEBUG2"); 
+      data[3]=0x00;
+    }
+    
     //SERIAL_PORT_MONITOR.println("UP");  // MENU UP
   } else if(digitalRead(buttonPin3)) { //if (digitalRead(buttonPin4) && digitalRead(buttonPin6)) {//Left+shift - shift requires two buttons to be pressed
     data[3]=0x08;
@@ -92,27 +101,30 @@ void loop() {
     if(data[3] != 0x00) {
       data[3]=0x00;
       pressed=false;
-      //SERIAL_PORT_MONITOR.println("DEBUG1");
+      SERIAL_PORT_MONITOR.println("RESET1");
     } else if(data[4] != 0x00) {
       data[4]=0x00;
       pressed=false;
-      //SERIAL_PORT_MONITOR.println("DEBUG2");
+      SERIAL_PORT_MONITOR.println("RESET2");
     }
   }
 
-  //data[7] = i;
+  data[7] = i;
 
-  //if (i==0x0F) {
-  //  i=0x00; //reset
-  //} else {
-  //  i++;
-  //}
+  if (i==0x0F) {
+    i=0x00; //reset
+  } else {
+    i++;
+  }
 
 
+  //if(!pressed && (data[3] != 0x00 || data[4] != 0x00)) {
   if(data[3] != 0x00 || data[4] != 0x00) {
-    //SERIAL_PORT_MONITOR.println("SEND MSG");
+    SERIAL_PORT_MONITOR.println("SEND MSG");
     //CAN.sendMsgBuf(can_id, ext, 0, len, data);
     //CAN.MCP_CAN::sendMsgBuf(can_id, ext, len, data);
     pressed=true;
   }
+
+  CAN.sendMsgBuf(can_id, ext, 0, len, data);
 }
